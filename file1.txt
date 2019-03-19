@@ -1,1 +1,1 @@
-this is very BAD code
+this is very GOOD code
