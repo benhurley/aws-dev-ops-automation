@@ -4,7 +4,8 @@ def getGitBranchName() {
 }
 
 pipeline {
- agent { label 'ubuntu_with_docker' }
+ agent { label 'master'}
+   stages{
    stage('Rollback'){
      steps {
          sh ''' 
@@ -21,6 +22,7 @@ pipeline {
             echo Pushing changes to remote repo
             git push
          '''
+      }
     }
-  }
+   }
 }
