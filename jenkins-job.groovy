@@ -10,6 +10,7 @@ pipeline {
      steps {
          sh ''' 
             git checkout master
+            git remote set-url origin git@github.com/benhurley/swa.git
             echo Initiating Rollback
             echo
             echo Pulling any changes from remote repo
