@@ -9,6 +9,7 @@ pipeline {
    stage('Rollback'){
      steps {
          sh ''' 
+            git checkout master
             echo Initiating Rollback
             echo
             echo Pulling any changes from remote repo
