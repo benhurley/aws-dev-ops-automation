@@ -21,8 +21,6 @@ pipeline {
             echo Pushing changes to remote repo
             git push
          '''
-       }
-     }
-   }
- }
+    }
+  }
 }
