@@ -52,7 +52,7 @@ then
 
     if [[ $revertCheck = *Merge* ]] ;
     then
-        echo Merge found. Reverting branch merge. (most-recent commit):
+        echo Merge found. Reverting merged branch.
         echo
         git log -1
         echo
