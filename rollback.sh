@@ -29,13 +29,13 @@ then
 fi
 
 # Pick a branch to switch to
-echo Switching to Pariveda Branch
+echo Switching to master branch
 echo
-#git checkout pariveda
+git checkout master
 
 echo Pulling updates from remote repository
 echo
-#git pull
+git pull
 
 echo Checking last commit message for Revert
 revertCheck="$(git log -1 --format=%s)"
@@ -47,43 +47,51 @@ then
     #deploy HEAD to current environment
 
     else    
+    echo No revert found.
     echo
 
-    #TODO check for a merge before going forward
-    echo No revert found. Reverting most-recent commit:
-    echo
-    git log -1
-    # git revert -m 1 HEAD
-    # deploy 
-    echo Pushing changes to remote repository
-    #git push
+    if [[ $revertCheck = *Merge* ]] ;
+    then
+        echo Merge found. Reverting branch merge. (most-recent commit):
+        echo
+        git log -1
+        echo
+        git revert -m 1 HEAD
+        echo Pushing changes to remote repository
+        echo
+        git push
+    else
+        echo
+        echo No merge found.
+    fi
 fi
+
 # else we are in east region (edge case)
 
-echo
-echo Routing 10% of traffic to $myRegion
-#TODO add that functionality
-echo
-echo Pause for examining CloudWatch Logs, enter 'y' to continue
-read ans1
-if [[ $ans1 = y ]]; 
-then 
-    echo
-    echo Routing 100% of traffic to $myRegion
-    #TODO add that functionality
-    echo
-    echo Pause for examining CloudWatch Logs, enter 'y' to continue
-    read ans2
+# echo
+# echo Routing 10% of traffic to $myRegion
+# TODO add that functionality
+# echo
+# echo Pause for examining CloudWatch Logs, enter 'y' to continue
+# read ans1
+# if [[ $ans1 = y ]]; 
+# then 
+#    echo
+#    echo Routing 100% of traffic to $myRegion
+#    #TODO add that functionality
+#    echo
+#    echo Pause for examining CloudWatch Logs, enter 'y' to continue
+#    read ans2
 
-    if [[ $ans2 = y ]]; 
-    then 
-        echo Rollback complete, re-routing 100% of traffic back to $otherRegion.
+#    if [[ $ans2 = y ]]; 
+#    then 
+#        echo Rollback complete, re-routing 100% of traffic back to $otherRegion.
         #TODO add that functionality
-    else
-        echo Error found. Re-routing 100% of traffic back to $otherRegion for manual debug.
+#    else
+#        echo Error found. Re-routing 100% of traffic back to $otherRegion for manual debug.
         #TODO add that functionality
-    fi
-else   
-    echo Error found. Re-routing 100% of traffic back to $otherRegion for manual debug.
+#    fi
+#else   
+#    echo Error found. Re-routing 100% of traffic back to $otherRegion for manual debug.
     #TODO add that functionality
-fi
+#fi
