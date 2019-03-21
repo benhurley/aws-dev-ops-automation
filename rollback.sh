@@ -11,10 +11,10 @@ echo --------------------
 echo Initiating Rollback
 echo --------------------
 echo
+
 # Determine Region
 #TODO hard-coding west for now, need to read param
 myRegion="west"
-
 otherRegion=""
 
 echo Current Region: $myRegion
@@ -40,6 +40,7 @@ git pull
 echo Checking last commit message for Revert
 revertCheck="$(git log -1 --format=%s)"
 echo Last Commit: $revertCheck
+
 if [[ $revertCheck = *Revert* ]] ;
 then
     echo
@@ -56,15 +57,17 @@ then
         echo
         git log -1
         echo
-        git revert -m 1 HEAD
+        git revert --no-edit -m 1 HEAD
         echo Pushing changes to remote repository
         echo
         git push
     else
         echo
-        echo No merge found.
+        echo No merge found. Will not rollback.
     fi
 fi
+
+# Manual steps to check CloudWatch Logs
 
 # else we are in east region (edge case)
 
