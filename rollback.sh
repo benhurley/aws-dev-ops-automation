@@ -7,6 +7,61 @@
 # done, it will deploy the rollback build to the target environment. It will also pause for log
 # validation and terminate if the user finds an error.
 
+
+# Functions
+
+revertMerge()
+{
+    echo The following merge will be reverted:
+    echo
+    git log -1
+    echo
+    git revert --no-edit -m 1 HEAD
+    echo
+    echo Revert complete. Pushing changes to remote repository.
+    echo
+    git push
+    echo
+}
+
+rollbackPrereqs() 
+{
+    # Pick a branch to switch to
+    echo Switching to master branch
+    echo
+    git checkout master
+
+    echo Pulling updates from remote repository
+    echo
+    git pull
+
+    echo Checking last commit message for Revert
+    revertCheck="$(git log -1 --format=%s)"
+    echo Last Commit: $revertCheck
+
+    if [[ $revertCheck = *Revert* ]] ;
+    then
+        echo
+        echo REVERT FOUND: Codebase has already reverted, deploying HEAD to $myRegion
+        #deploy HEAD to current environment
+
+        else    
+        echo No revert found.
+        echo
+
+        if [[ $revertCheck = *Merge* ]] ;
+        then
+            echo Merge found. Reverting merged branch.
+            revertMerge
+        else
+            echo
+            echo No merge found. Will not rollback.
+        fi
+    fi
+}
+
+# Main script starts here
+
 echo --------------------
 echo Initiating Rollback
 echo --------------------
@@ -20,51 +75,23 @@ otherRegion=""
 echo Current Region: $myRegion
 echo
 
-# determine other region
-if [[ $myRegion = "west" ]];
+# assign other region
+if [[ $myRegion = "east" ]];
 then 
-    otherRegion="east"
-    else
+    # We need to rollback east and west, starting with east
     otherRegion="west"
-fi
+    # Rollback East
+    rollbackPrereqs
 
-# Pick a branch to switch to
-echo Switching to master branch
-echo
-git checkout master
+    # switch to West
+    $myRegion = $otherRegion
+    # Rollback West
+    rollbackPrereqs
 
-echo Pulling updates from remote repository
-echo
-git pull
-
-echo Checking last commit message for Revert
-revertCheck="$(git log -1 --format=%s)"
-echo Last Commit: $revertCheck
-
-if [[ $revertCheck = *Revert* ]] ;
-then
-    echo
-    echo REVERT FOUND: Codebase has already reverted, deploying HEAD to $myRegion
-    #deploy HEAD to current environment
-
-    else    
-    echo No revert found.
-    echo
-
-    if [[ $revertCheck = *Merge* ]] ;
-    then
-        echo Merge found. Reverting merged branch.
-        echo
-        git log -1
-        echo
-        git revert --no-edit -m 1 HEAD
-        echo Pushing changes to remote repository
-        echo
-        git push
     else
-        echo
-        echo No merge found. Will not rollback.
-    fi
+    # We need to rollback west only
+    otherRegion="east"
+    rollbackPrereqs
 fi
 
 # Manual steps to check CloudWatch Logs
