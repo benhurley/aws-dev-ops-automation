@@ -12,7 +12,7 @@
 
 revertMerge()
 {
-    echo The following merge will be reverted:
+    echo Merge found. The following merge will be reverted:
     echo
     git log -1
     echo
@@ -45,17 +45,21 @@ rollbackPrereqs()
         echo REVERT FOUND: Codebase has already reverted, deploying HEAD to $myRegion
         #deploy HEAD to current environment
 
-        else    
+        else
+        echo 
         echo No revert found.
+        echo
+
+        echo Checking last commit message for Merge
         echo
 
         if [[ $revertCheck = *Merge* ]] ;
         then
-            echo Merge found. Reverting merged branch.
             revertMerge
         else
             echo
             echo No merge found. Will not rollback.
+            echo
         fi
     fi
 }
@@ -94,6 +98,11 @@ then
     otherRegion="east"
     rollbackPrereqs
 fi
+
+echo --------------------
+echo End Rollback
+echo --------------------
+echo
 
 # Manual steps to check CloudWatch Logs
 
