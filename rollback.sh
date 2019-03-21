@@ -84,7 +84,8 @@ then
     rollbackPrereqs
 
     # switch to West
-    myRegion = $otherRegion
+    myRegion="west"
+    otherRegion="east"
     # Rollback West
     rollbackPrereqs
 
