@@ -12,13 +12,13 @@
 
 revertMerge()
 {
-    echo The following merge will be reverted:
+    echo Merge found. The following merge will now be reverted:
     echo
     git log -1
     echo
     git revert --no-edit -m 1 HEAD
     echo
-    echo Revert complete. Pushing changes to remote repository.
+    echo Pushing changes to remote repository.
     echo
     git push
     echo
@@ -31,33 +31,49 @@ rollbackPrereqs()
     echo
     git checkout master
 
-    echo Pulling updates from remote repository
     echo
-    git pull
+    echo Checking for valid commit history
+    numCommits="$(git rev-list --count HEAD)"
 
-    echo Checking last commit message for Revert
-    revertCheck="$(git log -1 --format=%s)"
-    echo Last Commit: $revertCheck
-
-    if [[ $revertCheck = *Revert* ]] ;
-    then
+    # check to make sure revert is possible
+    if [[ $numCommits < 2 ]];
+    then    
+        # nowhere to rollback, teardown resources
+        # <call teardown script>
+        echo Stub for teardown script
         echo
-        echo REVERT FOUND: Codebase has already reverted, deploying HEAD to $myRegion
-        #deploy HEAD to current environment
-
-        else    
-        echo No revert found.
+    else 
+        # TODO echo Checking for last AppTeam Version
         echo
+        echo Checking last commit message for Revert
+        revertCheck="$(git log -1 --format=%s)"
+        echo Last Commit: $revertCheck
 
-        if [[ $revertCheck = *Merge* ]] ;
+        if [[ $revertCheck = *Revert* ]] ;
         then
-            echo Merge found. Reverting merged branch.
-            revertMerge
-        else
             echo
-            echo No merge found. Will not rollback.
+            echo REVERT FOUND: Codebase has already reverted, deploying HEAD to $myRegion
+            #deploy HEAD to current environment
+
+            else
+            echo 
+            echo No revert found.
+            echo
+
+            echo Checking last commit message for Merge
+            echo
+
+            if [[ $revertCheck = *Merge* ]] ;
+            then
+                revertMerge
+            else
+                echo
+                echo No merge found. Will not rollback.
+                echo
+            fi
         fi
     fi
+
 }
 
 # Main script starts here
@@ -94,6 +110,11 @@ then
     otherRegion="east"
     rollbackPrereqs
 fi
+
+echo --------------------
+echo End Rollback
+echo --------------------
+echo
 
 # Manual steps to check CloudWatch Logs
 
