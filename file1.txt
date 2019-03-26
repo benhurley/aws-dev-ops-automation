@@ -1,5 +1,1 @@
 this is GOOD code
-
-Adding stuff for the first commit
-
-Adding stuff for the second commit
