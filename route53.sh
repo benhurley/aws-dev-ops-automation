@@ -74,7 +74,7 @@ then
 
 else
     echo Did not find two records for $recordName
-    exit
+    exit 1
 fi
 
 # Break out each region
@@ -86,7 +86,7 @@ then
         westRecord=$record2
     else
         echo Could not find valid record set for west region.
-        exit
+        exit 1
     fi
 elif [[ $record2 = *east* ]]  ;
 then
@@ -96,11 +96,11 @@ then
         westRecord=$record1
     else
         echo Could not find valid record set for west region.
-        exit
+        exit 1
     fi
 else
     echo Could not find valid record set for east region
-    exit
+    exit 1
 fi    
 
 echo Record Set for East Region:
