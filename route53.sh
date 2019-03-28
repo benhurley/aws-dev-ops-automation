@@ -3,27 +3,19 @@
 
 # This script handles switching over live traffic to free up resources within a region.
 
-# Variables:
-# $1 = hosted zone id
-# $2 = name of record set
-# $3 = new weight for east
-# $4 = new weight for west
-
 # Assumptions:
-# 1. Since setting every record set weight to '0' will evenly distribute traffic, '0'
-#   will only be used for 0% traffic situations (to avoid confusion). Traffic will be split mathematically if needed.
-#   Example: us-east-1: '5', us-west-2: '5'. Each is 5/10 = 50% (This is the same as setting both to '0')
-# 2. We are only supporting weighted routing policy so far (simple routing will require more logic)
+# 1. Since setting every record set weight to '0' will evenly distribute traffic, '0' will only be used for
+#    0% traffic situations to avoid confusion. Traffic will be split mathematically when needed (explained below).
+# 2. We are only supporting weighted routing policy so far, as this script reads current weighted values
+#    and pushes desired changes back into Route 53
 
-# Combos to pass in
+# Possible combinations for incoming weight parameters
 
-# 1. East=5, West=0     // 100% traffic to east
-# 2. East=9, West=1     // 10% traffic to west, 90% to east
-# 3. East=0, West=5     // 100% traffic to west
-# 4. East=1, West=9     // 10% traffic  to west, 90% to east
-# 5. East=5, West=5     // 50% traffic to each region
-
-# For weighted, this will return 2 records (one for east and one for west)
+# 1. East=5, West=0     // 100% traffic to east                 ((5 / 5+0) = 1 * 100 = 100% east)
+# 2. East=0, West=5     // 100% traffic to west                 ((5 / 5+0) = 1 * 100 = 100% west)
+# 3. East=9, West=1     // 90% traffic to east, 10% to west     ((9 / 9+1) = 0.9 * 100 = 90% east, (1 / 9+1) = 0.1 * 100 = 10% west)
+# 4. East=1, West=9     // 10% traffic to east, 90% to west     ((1 / 9+1) = 0.1 * 100 = 10% east, (9 / 9+1) = 0.9 * 100 = 90% west)
+# 5. East=5, West=5     // 50% traffic to each region           ((5 / 5+5) = 0.5 * 100 = 50% east, (5 / 5+5) = 0.5 * 100 = 50% west)
 
 echo
 echo ---------------------------------
@@ -37,14 +29,14 @@ recordName=$2
 newEastWeight=$3
 newWestWeight=$4
 
-echo Hosted Zone ID:  $hostedZoneID
+echo Hosted Zone ID: $hostedZoneID
 echo Record Name: $recordName
 echo
 
-# Pull down current configs from  Route 53
+# Pull down current configs from Route 53 for given record set name
 # recordSets="$(aws route53 list-resource-record-sets --hosted-zone-id $hostedZoneID --query "ResourceRecordSets[?Name == 'recordName']")"
 
-# taking example to start
+# Example for Testing
 recordSets='[
     {
         "Name": "this-that.com",
@@ -82,6 +74,7 @@ then
 
 else
     echo Did not find two records for $recordName
+    exit
 fi
 
 # Break out each region
@@ -92,19 +85,22 @@ then
         eastRecord=$record1
         westRecord=$record2
     else
-        echo Could not find record set for west region.
+        echo Could not find valid record set for west region.
+        exit
     fi
-elif [[ $record1 = *west* ]]  ;
+elif [[ $record2 = *east* ]]  ;
 then
-    if [[ $record2 = *east* ]] ;
+    if [[ $record1 = *west* ]] ;
     then
-        eastRecord=$record1
-        westRecord=$record2
+        eastRecord=$record2
+        westRecord=$record1
     else
-        echo Could not find record set for east region.
+        echo Could not find valid record set for west region.
+        exit
     fi
 else
-    echo Could not find valid record sets for east and/or west regions
+    echo Could not find valid record set for east region
+    exit
 fi    
 
 echo Record Set for East Region:
