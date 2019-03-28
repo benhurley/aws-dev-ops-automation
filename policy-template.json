@@ -1,0 +1,35 @@
+{
+    "Comment": "Changing weights for east and west regions",
+    "Changes": [
+        {
+          "Action": "UPSERT",
+          "ResourceRecordSet": {
+            "Name": RECORDNAME,
+            "SetIdentifier": SETID_EAST,
+            "Type": TYPE_EAST,
+            "TTL": TTL_EAST,
+            "Weight": WEIGHT_EAST,
+            "ResourceRecords": [
+              {
+                "Value": RESOURCE_VALUE_EAST
+              }
+            ]
+          }
+        },
+        {
+          "Action": "UPSERT",
+          "ResourceRecordSet": {
+            "Name": RECORDNAME,
+            "SetIdentifier": SETID_WEST,
+            "Type": TYPE_WEST,
+            "TTL": TTL_WEST,
+            "Weight": WEIGHT_WEST,
+            "ResourceRecords": [
+              {
+                "Value": RESOUCE_VALUE_WEST
+              }
+            ]
+          }
+        }
+      ]
+  }

@@ -34,44 +34,14 @@ echo Record Name: $recordName
 echo
 
 # Pull down current configs from Route 53 for given record set name
-# recordSets="$(aws route53 list-resource-record-sets --hosted-zone-id $hostedZoneID --query "ResourceRecordSets[?Name == '$recordName']")"
-
-# Example for Testing
-recordSets='[
-    {
-        "Name": "this-that.com",
-        "Type": "CNAME",
-        "Value": "us-east-1-this-that.com",
-        "TTL": 60,
-        "Weight": 5,
-        "SetID": "API gateway us-east-1"
-    },
-    {
-        "Name": "this-that.com",
-        "Type": "CNAME",
-        "Value": "us-west-2-this-that.com",
-        "TTL": 60,
-        "Weight": 0,
-        "SetID": "API gateway us-west-2"
-    }
-]'
-
-#echo Full record set:
-#echo $recordSets
-#echo
+recordSets="$(aws route53 list-resource-record-sets --hosted-zone-id $hostedZoneID --query "ResourceRecordSets[?Name == '$recordName']")"
 
 numRecords="$(echo "$recordSets" | jq 'length')"
 
 if [[ $numRecords = 2 ]];
 then
     record1="$(echo "$recordSets" | jq '.[0]')"
-    #echo record1: $record1
-    #echo
-
     record2="$(echo "$recordSets" | jq '.[1]')"
-    #echo record2: $record2
-    #echo
-
 else
     echo Did not find two records for $recordName
     exit 1
@@ -110,6 +80,39 @@ echo
 echo Record Set for West Region:
 echo $westRecord
 
+# Pull Set ID for each region
+echo
+echo Current Set IDs for each region in $recordName:
+setIDEast="$(echo "$eastRecord" | jq '.SetIdentifier')"
+setIDWest="$(echo "$westRecord" | jq '.SetIdentifier')"
+echo East SetID: $setIDEast
+echo West SetID: $setIDWest
+
+# Pull Type for each region
+echo
+echo Current Type for each region in $recordName:
+typeEast="$(echo "$eastRecord" | jq '.Type')"
+typeWest="$(echo "$westRecord" | jq '.Type')"
+echo East Type: $typeEast
+echo West Type: $typeWest
+
+# Pull TTL for each region
+echo
+echo Current TTL for each region in $recordName:
+ttlEast="$(echo "$eastRecord" | jq '.TTL')"
+ttlWest="$(echo "$westRecord" | jq '.TTL')"
+echo East TTL: $ttlEast
+echo West TTL: $ttlWest
+
+# Pull Resource Values for each region
+echo
+echo Current Resource Valyes for each region in $recordName:
+resourceValEast="$(echo "$eastRecord" | jq '.ResourceRecords[0].Value')"
+resourceValWest="$(echo "$westRecord" | jq '.ResourceRecords[0].Value')"
+echo East Resource Value: $resourceValEast
+echo West Resource Value: $resourceValWest
+
+# Pull Weights for each region
 echo
 echo Current Route53 weights for each region in $recordName:
 eastWeight="$(echo "$eastRecord" | jq '.Weight')"
@@ -144,12 +147,40 @@ echo New East Weight: $newEastWeight
 echo New West Weight: $newWestWeight
 
 # Pushing updates to Route 53 record sets
-# TODO
+
+echo
+echo Creating policy file to push changes back to $recordName
+echo
+
+# Record Name
+sed "s/RECORDNAME/$recordName/g" policy-template.json > policy.json
+
+# Set ID
+sed "s/SETID_EAST/$setIDEast" policy.json
+sed "s/SETID_WEST/$setIDWest" policy.json
+
+# Type
+sed "s/TYPE_EAST/$typeEast" policy.json
+sed "s/TYPE_WEST/$typeWest" policy.json
+
+# TTL
+sed "s/TTL_EAST/$ttlEast" policy.json
+sed "s/TTL_WEST/$ttlWest" policy.json
+
+# Weight
+sed "s/WEIGHT_EAST/$newEastWeight" policy.json
+sed "s/WEIGHT_WEST/$newWestWeight" policy.json
+
+# Resources
+sed "s/RESOURCE_VALUE_EAST/$resourceValEast" policy.json
+sed "s/RESOURCE_VALUE_WEST/$resourceValWest" policy.json
+
+
+echo Executing aws command to update weights to new weights
+aws route53 change-resource-record-sets --hosted-zone-id $hostedZoneID --change-batch file://policy.json
 
 echo
 echo ---------------------------
 echo End Route53 Traffic Change
 echo ---------------------------
 echo
-
-
