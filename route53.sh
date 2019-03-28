@@ -34,7 +34,7 @@ echo Record Name: $recordName
 echo
 
 # Pull down current configs from Route 53 for given record set name
-# recordSets="$(aws route53 list-resource-record-sets --hosted-zone-id $hostedZoneID --query "ResourceRecordSets[?Name == 'recordName']")"
+# recordSets="$(aws route53 list-resource-record-sets --hosted-zone-id $hostedZoneID --query "ResourceRecordSets[?Name == '$recordName']")"
 
 # Example for Testing
 recordSets='[
