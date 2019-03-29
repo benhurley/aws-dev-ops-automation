@@ -14,7 +14,7 @@ echo Initiating Rollback
 echo --------------------
 echo
 
-# Read in current region and branch
+# Read in current branch
 branch=$1
 
 echo Switching to $branch
