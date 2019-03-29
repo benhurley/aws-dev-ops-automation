@@ -80,6 +80,10 @@ echo
 echo Record Set for West Region:
 echo $westRecord
 
+# Pull name
+
+nameString="$(echo "$eastRecord" | jq '.Name')"
+
 # Pull Set ID for each region
 echo
 echo Current Set IDs for each region in $recordName:
@@ -106,7 +110,7 @@ echo West TTL: $ttlWest
 
 # Pull Resource Values for each region
 echo
-echo Current Resource Valyes for each region in $recordName:
+echo Current Resource Values for each region in $recordName:
 resourceValEast="$(echo "$eastRecord" | jq '.ResourceRecords[0].Value')"
 resourceValWest="$(echo "$westRecord" | jq '.ResourceRecords[0].Value')"
 echo East Resource Value: $resourceValEast
@@ -152,35 +156,30 @@ echo
 echo Creating policy file to push changes back to $recordName
 echo
 
+
 # Record Name
-sed "s/RECORDNAME/$recordName/g" policy-template.json > policy.json
+sed "s/RECORDNAME/$nameString/g" policy-template.json > policy.json
 
 # Set ID
-sed "s/SETID_EAST/$setIDEast" policy.json
-sed "s/SETID_WEST/$setIDWest" policy.json
+sed -i "s/SETID_EAST/$setIDEast/g" policy.json
+sed -i "s/SETID_WEST/$setIDWest/g" policy.json
 
 # Type
-sed "s/TYPE_EAST/$typeEast" policy.json
-sed "s/TYPE_WEST/$typeWest" policy.json
+sed -i "s/TYPE_EAST/$typeEast/g" policy.json
+sed -i "s/TYPE_WEST/$typeWest/g" policy.json
 
 # TTL
-sed "s/TTL_EAST/$ttlEast" policy.json
-sed "s/TTL_WEST/$ttlWest" policy.json
+sed -i "s/TTL_EAST/$ttlEast/g" policy.json
+sed -i "s/TTL_WEST/$ttlWest/g" policy.json
 
 # Weight
-sed "s/WEIGHT_EAST/$newEastWeight" policy.json
-sed "s/WEIGHT_WEST/$newWestWeight" policy.json
+sed -i "s/WEIGHT_EAST/$newEastWeight/g" policy.json
+sed -i "s/WEIGHT_WEST/$newWestWeight/g" policy.json
 
 # Resources
-sed "s/RESOURCE_VALUE_EAST/$resourceValEast" policy.json
-sed "s/RESOURCE_VALUE_WEST/$resourceValWest" policy.json
+sed -i "s/RESOURCE_VALUE_EAST/$resourceValEast/g" policy.json
+sed -i "s/RESOURCE_VALUE_WEST/$resourceValWest/g" policy.json
 
 
 echo Executing aws command to update weights to new weights
 aws route53 change-resource-record-sets --hosted-zone-id $hostedZoneID --change-batch file://policy.json
-
-echo
-echo ---------------------------
-echo End Route53 Traffic Change
-echo ---------------------------
-echo
