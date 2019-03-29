@@ -7,75 +7,6 @@
 # done, it will deploy the rollback build to the target environment. It will also pause for log
 # validation and terminate if the user finds an error.
 
-
-# Functions
-
-revertMerge()
-{
-    echo Merge found. The following merge will now be reverted:
-    echo
-    git log -1
-    echo
-    git revert --no-edit -m 1 HEAD
-    echo
-    echo Pushing changes to remote repository.
-    echo
-    git push
-    echo
-}
-
-rollbackPrereqs() 
-{
-    # Pick a branch to switch to
-    echo Switching to master branch
-    echo
-    git checkout master
-
-    echo
-    echo Checking for valid commit history
-    numCommits="$(git rev-list --count HEAD)"
-
-    # check to make sure revert is possible
-    if [[ $numCommits < 2 ]];
-    then    
-        # nowhere to rollback, teardown resources
-        # <call teardown script>
-        echo Stub for teardown script
-        echo
-    else 
-        # TODO echo Checking for last AppTeam Version
-        echo
-        echo Checking last commit message for Revert
-        revertCheck="$(git log -1 --format=%s)"
-        echo Last Commit: $revertCheck
-
-        if [[ $revertCheck = *Revert* ]] ;
-        then
-            echo
-            echo REVERT FOUND: Codebase has already reverted, deploying HEAD to $myRegion
-            #deploy HEAD to current environment
-
-            else
-            echo 
-            echo No revert found.
-            echo
-
-            echo Checking last commit message for Merge
-            echo
-
-            if [[ $revertCheck = *Merge* ]] ;
-            then
-                revertMerge
-            else
-                echo
-                echo No merge found. Will not rollback.
-                echo
-            fi
-        fi
-    fi
-
-}
-
 # Main script starts here
 
 echo --------------------
@@ -83,67 +14,52 @@ echo Initiating Rollback
 echo --------------------
 echo
 
-# Determine Region
-#TODO hard-coding west for now, need to read param
-myRegion="west"
-otherRegion=""
+# Read in current region and branch
+branch=$1
 
-echo Current Region: $myRegion
+echo Switching to $branch
 echo
+git checkout $branch
 
-# assign other region
-if [[ $myRegion = "east" ]];
-then 
-    # We need to rollback east and west, starting with east
-    otherRegion="west"
-    # Rollback East
-    rollbackPrereqs
+echo Checking last commit message for Revert
+revertCheck="$(git log -1 --format=%s)"
+echo Last Commit: $revertCheck
 
-    # switch to West
-    myRegion="west"
-    otherRegion="east"
-    # Rollback West
-    rollbackPrereqs
+if [[ $revertCheck = *Revert* ]] ;
+then
+    echo
+    echo REVERT FOUND: Codebase has already reverted, manually deploy to environment.
+    echo
+    echo --------------------
+    echo End Rollback
+    echo --------------------
+    echo
+    exit 1
 
+else
+    echo Checking last commit message for Merge
+    echo
+
+    if [[ $revertCheck = *Merge* ]] ;
+    then
+        echo MERGE FOUND. The following merge will now be reverted:
+        echo
+        git log -1
+        echo
+        git revert --no-edit -m 1 HEAD
+        echo
+        echo Pushing changes to remote repository.
+        echo
+        git push --set-upstream origin $branch
+        echo
     else
-    # We need to rollback west only
-    otherRegion="east"
-    rollbackPrereqs
+        echo
+        echo No merge found. Will not rollback.
+        echo
+    fi
 fi
 
-echo --------------------
+echo ------------
 echo End Rollback
-echo --------------------
+echo ------------
 echo
-
-# Manual steps to check CloudWatch Logs
-
-# else we are in east region (edge case)
-
-# echo
-# echo Routing 10% of traffic to $myRegion
-# TODO add that functionality
-# echo
-# echo Pause for examining CloudWatch Logs, enter 'y' to continue
-# read ans1
-# if [[ $ans1 = y ]]; 
-# then 
-#    echo
-#    echo Routing 100% of traffic to $myRegion
-#    #TODO add that functionality
-#    echo
-#    echo Pause for examining CloudWatch Logs, enter 'y' to continue
-#    read ans2
-
-#    if [[ $ans2 = y ]]; 
-#    then 
-#        echo Rollback complete, re-routing 100% of traffic back to $otherRegion.
-        #TODO add that functionality
-#    else
-#        echo Error found. Re-routing 100% of traffic back to $otherRegion for manual debug.
-        #TODO add that functionality
-#    fi
-#else   
-#    echo Error found. Re-routing 100% of traffic back to $otherRegion for manual debug.
-    #TODO add that functionality
-#fi
