@@ -2,15 +2,15 @@
 #switchTraffic.sh
 
 # This script handles switching over live traffic between regions (us-east-1 and us-west-2)
-
+#
 # Assumptions:
 # 1. Since setting every record set weight to '0' will evenly distribute traffic, '0' will only be used for
 #    0% traffic situations to avoid confusion. Traffic will be split mathematically when needed (explained below).
 # 2. We are only supporting weighted routing policy so far, as this script reads current weighted values
 #    and pushes desired changes back into Route 53
-
+#
 # Possible combinations for incoming weight parameters
-
+#
 # 1. East=5, West=0     // 100% traffic to east                 ((5 / 5+0) = 1 * 100 = 100% east)
 # 2. East=0, West=5     // 100% traffic to west                 ((5 / 5+0) = 1 * 100 = 100% west)
 # 3. East=9, West=1     // 90% traffic to east, 10% to west     ((9 / 9+1) = 0.9 * 100 = 90% east, (1 / 9+1) = 0.1 * 100 = 10% west)
